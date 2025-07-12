@@ -105,7 +105,7 @@ The Google Calendar app and iOS Calendar on iPhone **do not support real-time pu
 
 ## 🚩 About Default Reminder Time
 
-Due to Google Apps Script limitations, the system cannot detect your calendar’s default reminder settings and will use a default 30-minute reminder for helper events unless a different reminder is explicitly set on the event.
+Due to Google Apps Script limitations, the system cannot detect your calendar’s default reminder settings and will use a default 30-minute reminder for helper events unless a different reminder is explicitly set on the event. If you don't want alarm add `no alarm` in title.
 
 
 ---

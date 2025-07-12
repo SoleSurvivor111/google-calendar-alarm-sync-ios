@@ -31,7 +31,7 @@ function getReadableTimeUnit(minutes) {
 /**
  * Create short hash id from string for event
  */
-function getShortId(idSafe) {
+function createShortIdFromString(idSafe) {
   return Utilities.base64EncodeWebSafe(
     Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, idSafe)
   ).slice(0, 8);
@@ -40,7 +40,7 @@ function getShortId(idSafe) {
 /**
  * Create short random id for event
  */
-function createShortId() {
+function createRandomShortId() {
   return Utilities.getUuid().replace(/-/g, "").substring(0, 8);
 }
 
@@ -50,15 +50,16 @@ function createShortId() {
 function createEventBasedOnNotifications() {
   const cal = CalendarApp.getDefaultCalendar();
   const now = new Date();
-  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const defaultReminderMinutes = 30;
 
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate()
   );
-  const startOfYesterday = new Date(startOfToday.getTime() - MS_PER_DAY);
-  const endOfTomorrow = new Date(startOfToday.getTime() + 2 * MS_PER_DAY);
+  const startOfYesterday = new Date(startOfToday.getTime() - msPerDay);
+  const endOfTomorrow = new Date(startOfToday.getTime() + 2 * msPerDay);
 
   const parentIdName = "parentId";
   const alarmIdName = "alarmId";
@@ -106,11 +107,12 @@ function createEventBasedOnNotifications() {
     const title = event.getTitle();
     const startTime = event.getStartTime();
     const id = event.getId();
+    const shortId = createShortIdFromString(id);
     let description = event.getDescription();
 
     // Ensure description has IDs for tracking
-    if (!description.includes(id)) {
-      description += `\n\n${parentIdName}=[${id}]\n${alarmIdName}=[${createShortId()}]`;
+    if (!description.includes(shortId)) {
+      description += `\n\n${alarmIdName}=[${shortId}]`;
       event.setDescription(description.trim());
       log(`✏️ Updated description with IDs for: "${title}"`);
     }
@@ -120,8 +122,9 @@ function createEventBasedOnNotifications() {
       ...event.getPopupReminders(),
       ...event.getEmailReminders(),
     ].sort((a, b) => a - b);
-    if (reminders.length === 0) {
-      reminders = [30]; // Default 30 min reminder if none exist
+
+    if (reminders.length === 0 && !description.includes("no alarm")) {
+      reminders = [defaultReminderMinutes];
     }
 
     // Check for changes using snapshot to avoid unnecessary recreation
@@ -166,7 +169,7 @@ function createEventBasedOnNotifications() {
       const helperTitle = `[${readableValue}${readableUnit} before]: ${title}`;
 
       cal.createEvent(helperTitle, reminderTime, reminderEndTime, {
-        description: `${parentIdName}=[${id}]\n${alarmIdName}=[${createShortId()}]`,
+        description: `${parentIdName}=[${id}]\n${alarmIdName}=[${createRandomShortId()}]`,
       });
 
       log(`✅ Created helper: "${helperTitle}" at ${reminderTime}`);
