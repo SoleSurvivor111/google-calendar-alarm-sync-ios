@@ -2,11 +2,15 @@
 
 **Automate your reminders, sync with iPhone alarms, and never miss an event again.**
 
-This flexible **Google Apps Script + iPhone Shortcuts system** automatically creates clear, timed "helper events" in your Google Calendar and integrates them with **iPhone Clock alarms**. It's designed for busy people who want reliable reminders without the manual hassle.
+This flexible **Google Apps Script + iPhone Shortcuts system** automatically creates clear, timed "helper events" in your Google Calendar and integrates them with **iPhone Clock alarms**. It's designed for busy people who want reliable reminders without manual hassle.
 
 ## Why Generate Helper Events for iPhone Alarms
 
-The iPhone Clock,Calendar apps **cannot directly trigger reliable alarms from Google Calendar events** due to iOS limitations. By generating **helper events** in your Google Calendar, this system creates precise, time-based placeholders that your iPhone Shortcuts can detect and convert into **Clock app alarms** automatically. This bypasses iOS limitations, ensuring you receive dependable, audible notifications for your calendar events without manual alarm setup, keeping your workflow seamless and automated.
+The iPhone Clock app and Reminders app **cannot directly trigger reliable alarms from Google Calendar events** due to iOS limitations. By generating **helper events** in your Google Calendar, this system creates precise, time-based placeholders that your iPhone Shortcuts can detect and convert into **Clock app alarms** automatically. This bypasses iOS limitations, ensuring you receive dependable, audible notifications for your calendar events without manual alarm setup, keeping your workflow seamless and automated.
+
+## 📡 iPhone Google Calendar Update Limitation
+
+The Google Calendar app and iOS Calendar on iPhone **do not support real-time push updates** due to iOS system limitations. They only fetch updates periodically, so newly generated helper events may take several minutes to appear on your iPhone after creation. This is normal and expected behavior, and users should note that alarms based on helper events will not be instant but will sync within the usual iOS fetch intervals.
 
 ## ✨ What This Script Does
 
