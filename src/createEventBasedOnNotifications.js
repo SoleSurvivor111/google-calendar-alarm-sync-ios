@@ -64,7 +64,7 @@ function createEventBasedOnNotifications() {
   const parentIdName = "parentId";
   const alarmIdName = "alarmId";
   const userProps = PropertiesService.getUserProperties();
-  const snapshotKey = "snapshot"; // MISSING previously in your code
+  const snapshotKey = "snapshot";
 
   const matchHelperRegExp = /^\[.+? before\]:/;
 
@@ -106,8 +106,8 @@ function createEventBasedOnNotifications() {
   originalEvents.forEach((event) => {
     const title = event.getTitle();
     const startTime = event.getStartTime();
-    const id = event.getId();
-    const shortId = createShortIdFromString(id);
+    const originalEventId = event.getId();
+    const shortId = createShortIdFromString(originalEventId);
     let description = event.getDescription();
 
     // Ensure description has IDs for tracking
@@ -128,7 +128,9 @@ function createEventBasedOnNotifications() {
     }
 
     // Check for changes using snapshot to avoid unnecessary recreation
-    const lastSnapshotRaw = userProps.getProperty(`${snapshotKey}_${id}`); // FIX: snapshot should be per-event
+    const lastSnapshotRaw = userProps.getProperty(
+      `${snapshotKey}_${originalEventId}`
+    );
     const lastSnapshot = lastSnapshotRaw ? JSON.parse(lastSnapshotRaw) : null;
 
     const currentSnapshot = {
@@ -147,7 +149,9 @@ function createEventBasedOnNotifications() {
 
     // Delete outdated helpers for this event
     helperEvents
-      .filter((e) => e.getDescription().includes(`${parentIdName}=[${id}]`))
+      .filter((e) =>
+        e.getDescription().includes(`${parentIdName}=[${originalEventId}]`)
+      )
       .forEach((e) => {
         e.deleteEvent();
         log(`🗑️ Deleted outdated helper: ${e.getTitle()}`);
@@ -169,7 +173,7 @@ function createEventBasedOnNotifications() {
       const helperTitle = `[${readableValue}${readableUnit} before]: ${title}`;
 
       cal.createEvent(helperTitle, reminderTime, reminderEndTime, {
-        description: `${parentIdName}=[${id}]\n${alarmIdName}=[${createRandomShortId()}]`,
+        description: `${parentIdName}=[${originalEventId}]\n${alarmIdName}=[${createRandomShortId()}]`,
       });
 
       log(`✅ Created helper: "${helperTitle}" at ${reminderTime}`);
@@ -177,7 +181,7 @@ function createEventBasedOnNotifications() {
 
     // Update snapshot for this event
     userProps.setProperty(
-      `${snapshotKey}_${id}`,
+      `${snapshotKey}_${originalEventId}`,
       JSON.stringify(currentSnapshot)
     );
   });
