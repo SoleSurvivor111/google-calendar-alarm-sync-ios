@@ -4,6 +4,10 @@
 
 This flexible **Google Apps Script + iPhone Shortcuts system** automatically creates clear, timed "helper events" in your Google Calendar and integrates them with **iPhone Clock alarms**. It's designed for busy people who want reliable reminders without the manual hassle.
 
+## Why Generate Helper Events for iPhone Alarms
+
+The iPhone Clock app and Reminders app **cannot directly trigger reliable alarms from Google Calendar events** due to iOS limitations. By generating **helper events** in your Google Calendar, this system creates precise, time-based placeholders that your iPhone Shortcuts can detect and convert into **Clock app alarms** automatically. This bypasses iOS limitations, ensuring you receive dependable, audible notifications for your calendar events without manual alarm setup, keeping your workflow seamless and automated.
+
 ## ✨ What This Script Does
 
 * **Automatically generates small "helper events"** in your Google Calendar for each reminder you set on events.
@@ -82,7 +86,7 @@ This system helps you:
 ---
 
 > **Summary:**
-
-This project **automates Google Calendar reminders, syncs with your iPhone Clock alarms, and cleans up expired helpers**, giving you a **reliable, automated reminders workflow for your daily life**.
-
-Set it up once and enjoy **automated event notifications for your Google Calendar on your iPhone** without manual effort.
+>
+> This project **automates Google Calendar reminders, syncs with your iPhone Clock alarms, and cleans up expired helpers**, giving you a **reliable, automated reminders workflow for your daily life**.
+>
+> Set it up once and enjoy **automated event notifications for your Google Calendar on your iPhone** without manual effort.
