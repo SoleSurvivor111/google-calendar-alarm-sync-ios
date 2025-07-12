@@ -36,7 +36,7 @@ The Google Calendar app and iOS Calendar on iPhone **do not support real-time pu
 
 All other automation for Google Calendar helper events runs fully automatically.
 
-## 🛠️ How to Set Up
+## 🛠️ How to Set Up Google Apps Script
 
 1. **Copy the Google Apps Script** into your Google Drive project.
 2. Set `DEBUG = true` for testing, `false` for live usage.
@@ -46,6 +46,22 @@ All other automation for Google Calendar helper events runs fully automatically.
    * **Daily Google Script trigger** for scanning changes.
    * **iPhone Shortcut trigger** every 30 minutes (or hourly) to sync helper events with Clock alarms.
 5. Ensure your **iOS default calendar is your Gmail/Google Calendar** for seamless syncing.
+
+## 🛠️ iPhone Shortcut Setup for Helper Events
+
+To sync helper events with your iPhone Clock alarms automatically:
+
+1. **Download the provided iOS Shortcut** from your repository (`src/Create Alarms From Calendar.shortcut`) or [link](https://www.icloud.com/shortcuts/be7134385027479ba1a065d39e901cec).
+2. Open the Shortcuts app on your iPhone.
+3. Import the Shortcut and review its permissions.
+4. Go to the **Automation** tab in Shortcuts and create a new personal automation.
+5. Select **Time of Day** trigger:
+
+   * Set it to run **every 30 minutes, every 1 hour, or every 2 hours** depending on your preference for update frequency.
+6. Add the imported Shortcut as the action to run automatically at these intervals.
+7. Enable **'Run Automatically'** and disable 'Ask Before Running' for seamless syncing.
+
+This setup ensures your iPhone periodically checks your Google Calendar for new helper events and creates the corresponding iPhone Clock alarms automatically without manual intervention, fitting your preferred refresh cadence.
 
 ## 🧹 Recommended: Cleanup Script
 
@@ -59,7 +75,7 @@ Set a **weekly trigger** (e.g., Sundays) for this cleanup.
 ## 📂 Repository Structure
 
 * `src/createEventBasedOnNotifications.js`: Main script for generating helper events.
-* `src/Shortcut-CreateAlarms.shortcut`: iPhone Shortcut to convert helper events into alarms.
+* `src/Create Alarms From Calendar.shortcut`: iPhone Shortcut to convert helper events into alarms.
 * `src/weeklyCleanupOldSnapshots.js`: Optional cleanup helper.
 
 Include these in your GitHub repo for easy modification and syncing.
