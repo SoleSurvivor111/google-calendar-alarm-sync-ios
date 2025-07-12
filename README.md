@@ -4,18 +4,6 @@
 
 This flexible **Google Apps Script + iPhone Shortcuts system** automatically creates clear, timed "helper events" in your Google Calendar and integrates them with **iPhone Clock alarms**. It's designed for busy people who want reliable reminders without manual hassle.
 
-## Why Generate Helper Events for iPhone Alarms
-
-The iPhone Clock app and Reminders app **cannot directly trigger reliable alarms from Google Calendar events** due to iOS limitations. By generating **helper events** in your Google Calendar, this system creates precise, time-based placeholders that your iPhone Shortcuts can detect and convert into **Clock app alarms** automatically. This bypasses iOS limitations, ensuring you receive dependable, audible notifications for your calendar events without manual alarm setup, keeping your workflow seamless and automated.
-
-## 📡 iPhone Google Calendar Update Limitation
-
-The Google Calendar app and iOS Calendar on iPhone **do not support real-time push updates** due to iOS system limitations. They only fetch updates periodically, so newly generated helper events may take several minutes to appear on your iPhone after creation. This is normal and expected behavior, and users should note that alarms based on helper events will not be instant but will sync within the usual iOS fetch intervals.
-
-## 🚩 About Default Reminder Time
-
-Due to Google Apps Script limitations, the system cannot detect your calendar’s default reminder settings and will use a default 30-minute reminder for helper events unless a different reminder is explicitly set on the event.
-
 ## ✨ What This Script Does
 
 * **Automatically generates small "helper events"** in your Google Calendar for each reminder you set on events.
@@ -30,15 +18,6 @@ Due to Google Apps Script limitations, the system cannot detect your calendar’
 * **See clear, time-based reminders** for your events directly on your iPhone.
 * **Reduce mental load** by automating repetitive reminder and alarm setups.
 * Ideal for freelancers, professionals, students, and anyone using **iPhone + Google Calendar** daily.
-
-## 🚧 iOS Alarm Limitation
-
-⚠️ Currently, the **iOS Shortcuts API cannot delete iPhone Clock alarms automatically**. You need to:
-
-* Manually clear old alarms in the Clock app.
-* Or use **Siri voice commands** like "Hey Siri, delete all alarms."
-
-All other automation for Google Calendar helper events runs fully automatically.
 
 ## 🛠️ How to Set Up Google Apps Script
 
@@ -106,6 +85,28 @@ This system helps you:
 * Add **reliable, audible alarms on your iPhone for Google Calendar events**.
 * Gain confidence in your schedule with layered notifications.
 * Reduce repetitive setup for recurring reminders.
+
+## Why Generate Helper Events for iPhone Alarms
+
+The iPhone Clock app and Reminders app **cannot directly trigger reliable alarms from Google Calendar events** due to iOS limitations. By generating **helper events** in your Google Calendar, this system creates precise, time-based placeholders that your iPhone Shortcuts can detect and convert into **Clock app alarms** automatically. This bypasses iOS limitations, ensuring you receive dependable, audible notifications for your calendar events without manual alarm setup, keeping your workflow seamless and automated.
+
+## 🚧 iOS Alarm Limitation
+
+⚠️ Currently, the **iOS Shortcuts API cannot delete iPhone Clock alarms automatically**. You need to:
+
+* Manually clear old alarms in the Clock app.
+* Or use **Siri voice commands** like "Hey Siri, delete all alarms."
+
+All other automation for Google Calendar helper events runs fully automatically.
+
+## 📡 iPhone Google Calendar Update Limitation
+
+The Google Calendar app and iOS Calendar on iPhone **do not support real-time push updates** due to iOS system limitations. They only fetch updates periodically, so newly generated helper events may take several minutes to appear on your iPhone after creation. This is normal and expected behavior, and users should note that alarms based on helper events will not be instant but will sync within the usual iOS fetch intervals.
+
+## 🚩 About Default Reminder Time
+
+Due to Google Apps Script limitations, the system cannot detect your calendar’s default reminder settings and will use a default 30-minute reminder for helper events unless a different reminder is explicitly set on the event.
+
 
 ---
 
