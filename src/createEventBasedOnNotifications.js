@@ -123,8 +123,12 @@ function createEventBasedOnNotifications() {
       ...event.getEmailReminders(),
     ].sort((a, b) => a - b);
 
-    if (reminders.length === 0 && !description.includes("no alarm")) {
+    if (reminders.length === 0) {
       reminders = [defaultReminderMinutes];
+    }
+
+    if (title.includes("no alarm")) {
+      reminders = [];
     }
 
     // Check for changes using snapshot to avoid unnecessary recreation
