@@ -6,7 +6,7 @@ This flexible **Google Apps Script + iPhone Shortcuts system** automatically cre
 
 ## Why Generate Helper Events for iPhone Alarms
 
-The iPhone Clock app and Reminders app **cannot directly trigger reliable alarms from Google Calendar events** due to iOS limitations. By generating **helper events** in your Google Calendar, this system creates precise, time-based placeholders that your iPhone Shortcuts can detect and convert into **Clock app alarms** automatically. This bypasses iOS limitations, ensuring you receive dependable, audible notifications for your calendar events without manual alarm setup, keeping your workflow seamless and automated.
+The iPhone Clock,Calendar apps **cannot directly trigger reliable alarms from Google Calendar events** due to iOS limitations. By generating **helper events** in your Google Calendar, this system creates precise, time-based placeholders that your iPhone Shortcuts can detect and convert into **Clock app alarms** automatically. This bypasses iOS limitations, ensuring you receive dependable, audible notifications for your calendar events without manual alarm setup, keeping your workflow seamless and automated.
 
 ## ✨ What This Script Does
 
