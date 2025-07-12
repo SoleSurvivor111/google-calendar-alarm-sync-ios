@@ -12,6 +12,10 @@ The iPhone Clock app and Reminders app **cannot directly trigger reliable alarms
 
 The Google Calendar app and iOS Calendar on iPhone **do not support real-time push updates** due to iOS system limitations. They only fetch updates periodically, so newly generated helper events may take several minutes to appear on your iPhone after creation. This is normal and expected behavior, and users should note that alarms based on helper events will not be instant but will sync within the usual iOS fetch intervals.
 
+## 🚩 About Default Reminder Time
+
+Due to Google Apps Script limitations, the system cannot detect your calendar’s default reminder settings and will use a default 30-minute reminder for helper events unless a different reminder is explicitly set on the event.
+
 ## ✨ What This Script Does
 
 * **Automatically generates small "helper events"** in your Google Calendar for each reminder you set on events.
