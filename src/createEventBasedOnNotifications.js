@@ -1,9 +1,7 @@
-const DEBUG = true; // Set to true during development
+const DEBUG = true; // Set to false in production
 
 function log(message) {
-  if (DEBUG) {
-    Logger.log(message);
-  }
+  if (DEBUG) Logger.log(message);
 }
 
 /**
@@ -19,8 +17,7 @@ function getReadableTimeUnit(minutes) {
     { unit: "m", minutes: 1 },
   ];
 
-  for (let i = 0; i < unitMapping.length; i++) {
-    const { unit, minutes: unitMinutes } = unitMapping[i];
+  for (let { unit, minutes: unitMinutes } of unitMapping) {
     if (minutes >= unitMinutes) {
       return {
         readableValue: Math.round(minutes / unitMinutes),
@@ -32,130 +29,128 @@ function getReadableTimeUnit(minutes) {
 }
 
 /**
- * Create short id from string for event
+ * Create short hash id from string for event
  */
 function getShortId(idSafe) {
-  const hash = Utilities.base64EncodeWebSafe(
+  return Utilities.base64EncodeWebSafe(
     Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, idSafe)
   ).slice(0, 8);
-  return hash;
 }
 
 /**
- * Create short id for event
+ * Create short random id for event
  */
 function createShortId() {
-  const uuid = Utilities.getUuid().replace(/-/g, ""); // remove dashes
-  return uuid.substring(0, 8); // take first 8 chars
+  return Utilities.getUuid().replace(/-/g, "").substring(0, 8);
 }
 
+/**
+ * Main function to create helper events based on notifications
+ */
 function createEventBasedOnNotifications() {
   const cal = CalendarApp.getDefaultCalendar();
   const now = new Date();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
   const startOfToday = new Date(
     now.getFullYear(),
     now.getMonth(),
     now.getDate()
   );
-  const startOfYesterday = new Date(
-    startOfToday.getTime() - 24 * 60 * 60 * 1000
-  );
-  const endOfTomorrow = new Date(
-    startOfToday.getTime() + 2 * 24 * 60 * 60 * 1000
-  );
-  const parentIdName = "parentId";
-  const alarmId = "alarmId";
-  const userProps = PropertiesService.getUserProperties();
-  const mathchHelperRegExp = /\[.+ before\]:/;
-  const matchParenIdRegExpt = /\[.+\]/;
+  const startOfYesterday = new Date(startOfToday.getTime() - MS_PER_DAY);
+  const endOfTomorrow = new Date(startOfToday.getTime() + 2 * MS_PER_DAY);
 
-  // Debounce guard to prevent loop
+  const parentIdName = "parentId";
+  const alarmIdName = "alarmId";
+  const userProps = PropertiesService.getUserProperties();
+  const snapshotKey = "snapshot"; // MISSING previously in your code
+
+  const matchHelperRegExp = /^\[.+? before\]:/;
+
+  // Debounce guard to prevent infinite loops
   const nowTs = Date.now();
   const lastRunTs = parseInt(userProps.getProperty("lastRun") || "0", 10);
-  if (nowTs - lastRunTs < 5 * 1000) {
-    // 5 sec
+  if (nowTs - lastRunTs < 5000) {
     log("⚠️ Skipping run to prevent loop re-trigger.");
     return;
   }
   userProps.setProperty("lastRun", nowTs.toString());
 
-  const originalsEvents = [];
-  const helpersEevents = [];
-  //get all event in period
-  cal.getEvents(startOfYesterday, endOfTomorrow).forEach((event) => {
-    if (!mathchHelperRegExp.test(event.getTitle())) {
-      originalsEvents.push(event);
+  const allEvents = cal.getEvents(startOfYesterday, endOfTomorrow);
+  const originalEvents = [];
+  const helperEvents = [];
+
+  // Separate original and helper events
+  allEvents.forEach((event) => {
+    if (!matchHelperRegExp.test(event.getTitle())) {
+      originalEvents.push(event);
     } else {
-      helpersEevents.push(event);
+      helperEvents.push(event);
     }
   });
 
-  // delete helper event if parent have been deleted
-  helpersEevents.forEach((event) => {
+  // Delete orphan helper events
+  helperEvents.forEach((event) => {
     const match = event
       .getDescription()
-      .match(`${parentIdName}=${matchParenIdRegExpt}`);
+      .match(new RegExp(`${parentIdName}=\\[(.+?)\\]`));
     const parentId = match && match[1];
     if (parentId && !CalendarApp.getEventById(parentId)) {
       event.deleteEvent();
-      log(`🗑️ Deleted orphan helper with missing parent: ${event.getTitle()}`);
+      log(`🗑️ Deleted orphan helper: ${event.getTitle()}`);
     }
   });
 
-  originalsEvents.forEach((event) => {
+  // Process original events
+  originalEvents.forEach((event) => {
     const title = event.getTitle();
     const startTime = event.getStartTime();
     const id = event.getId();
-    const shortIdForIphoneAlarm = getShortId(id);
-    const description = event.getDescription();
+    let description = event.getDescription();
 
-    if (!description.includes(shortIdForIphoneAlarm)) {
-      event.setDescription(
-        description +
-          `
-                      \n\n${parentIdName}=[${id}]
-                      \n${alarmId}=[${createShortId()}]
-                    `
-      );
+    // Ensure description has IDs for tracking
+    if (!description.includes(id)) {
+      description += `\n\n${parentIdName}=[${id}]\n${alarmIdName}=[${createShortId()}]`;
+      event.setDescription(description.trim());
+      log(`✏️ Updated description with IDs for: "${title}"`);
     }
 
+    // Retrieve and normalize reminders
     let reminders = [
       ...event.getPopupReminders(),
       ...event.getEmailReminders(),
     ].sort((a, b) => a - b);
-    // add defualt calendar app riminder
     if (reminders.length === 0) {
-      reminders = [30]; // Assume default if none are set
+      reminders = [30]; // Default 30 min reminder if none exist
     }
 
-    const snapshotKey = `snapshot_${id}`;
-    const lastSnapshotRaw = userProps.getProperty(snapshotKey);
-    const lastSnapshot = lastSnapshotRaw
-      ? JSON.parse(lastSnapshotRaw).reminders
-      : [];
+    // Check for changes using snapshot to avoid unnecessary recreation
+    const lastSnapshotRaw = userProps.getProperty(`${snapshotKey}_${id}`); // FIX: snapshot should be per-event
+    const lastSnapshot = lastSnapshotRaw ? JSON.parse(lastSnapshotRaw) : null;
 
-    if (JSON.stringify(lastSnapshot) === JSON.stringify(reminders)) {
-      log(`✅ No reminder change for "${title}". Skipping.`);
+    const currentSnapshot = {
+      reminders,
+      startTime: event.getStartTime().getTime(),
+      endTime: event.getEndTime().getTime(),
+      title: event.getTitle(),
+    };
+
+    if (JSON.stringify(lastSnapshot) === JSON.stringify(currentSnapshot)) {
+      log(`✅ No change for "${event.getTitle()}". Skipping.`);
       return;
     }
 
     log(`🔄 Changes detected for "${title}". Updating helpers.`);
 
-    // Delete all old helpers for this event
-    const allHelpers = cal
-      .getEvents(startOfYesterday, endOfTomorrow)
-      .filter(
-        (e) =>
-          e.getTitle().endsWith(`: ${title}`) &&
-          e.getTitle().startsWith("[") &&
-          e.getDescription().includes(`${parentIdName}=[${id}]`)
-      );
-    allHelpers.forEach((e) => {
-      e.deleteEvent();
-      log(`🗑️ Deleted helper: ${e.getTitle()}`);
-    });
+    // Delete outdated helpers for this event
+    helperEvents
+      .filter((e) => e.getDescription().includes(`${parentIdName}=[${id}]`))
+      .forEach((e) => {
+        e.deleteEvent();
+        log(`🗑️ Deleted outdated helper: ${e.getTitle()}`);
+      });
 
-    // Create new helpers for current reminders
+    // Create new helper events for each reminder
     reminders.forEach((minutesBefore) => {
       const reminderTime = new Date(
         startTime.getTime() - minutesBefore * 60 * 1000
@@ -164,28 +159,23 @@ function createEventBasedOnNotifications() {
         log(`⏩ Skipping past reminder for "${title}" at ${reminderTime}`);
         return;
       }
+
       const reminderEndTime = new Date(reminderTime.getTime() + 5 * 60 * 1000);
       const { readableValue, readableUnit } =
         getReadableTimeUnit(minutesBefore);
       const helperTitle = `[${readableValue}${readableUnit} before]: ${title}`;
 
       cal.createEvent(helperTitle, reminderTime, reminderEndTime, {
-        // Create short id for itilities events and IPhone alarms
-        description: `
-                      \n\n${parentIdName}=[${id}]
-                      \n${alarmId}=[${createShortId()}]
-                    `,
+        description: `${parentIdName}=[${id}]\n${alarmIdName}=[${createShortId()}]`,
       });
 
       log(`✅ Created helper: "${helperTitle}" at ${reminderTime}`);
     });
 
+    // Update snapshot for this event
     userProps.setProperty(
-      snapshotKey,
-      JSON.stringify({
-        reminders: reminders,
-        endTime: event.getEndTime().getTime(),
-      })
+      `${snapshotKey}_${id}`,
+      JSON.stringify(currentSnapshot)
     );
   });
 }
