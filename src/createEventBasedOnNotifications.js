@@ -90,18 +90,6 @@ function createEventBasedOnNotifications() {
     }
   });
 
-  // Delete orphan helper events
-  helperEvents.forEach((event) => {
-    const match = event
-      .getDescription()
-      .match(new RegExp(`${parentIdName}=\\[(.+?)\\]`));
-    const parentId = match && match[1];
-    if (parentId && !CalendarApp.getEventById(parentId)) {
-      event.deleteEvent();
-      log(`🗑️ Deleted orphan helper: ${event.getTitle()}`);
-    }
-  });
-
   // Process original events
   originalEvents.forEach((event) => {
     const title = event.getTitle();
