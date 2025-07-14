@@ -27,7 +27,7 @@ This flexible **Google Apps Script + iPhone Shortcuts system** automatically cre
 4. Set up triggers:
 
    * **Daily Google Script trigger** for scanning changes.
-   * **iPhone Shortcut trigger** every 30 minutes (or hourly) to sync helper events with Clock alarms.
+   * **Event from the calendar** for trigger if calendar changes during the day.
 5. Ensure your **iOS default calendar is your Gmail/Google Calendar** for seamless syncing.
 
 ## 🛠️ iPhone Shortcut Setup for Helper Events
