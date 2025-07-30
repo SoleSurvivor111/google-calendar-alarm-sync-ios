@@ -59,7 +59,9 @@ function createEventBasedOnNotifications() {
     now.getDate()
   );
   const startOfYesterday = new Date(startOfToday.getTime() - msPerDay);
-  const endOfTomorrow = new Date(startOfToday.getTime() + 2 * msPerDay);
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+  startOfYesterday.setHours(0, 0, 0, 0);
+  const endOf31Days = new Date(startOfToday.getTime() + 2 * msPerDay * 31);
 
   const parentIdName = "parentId";
   const alarmIdName = "alarmId";
@@ -77,7 +79,7 @@ function createEventBasedOnNotifications() {
   }
   userProps.setProperty("lastRun", nowTs.toString());
 
-  const allEvents = cal.getEvents(startOfYesterday, endOfTomorrow);
+  const allEvents = cal.getEvents(startOfYesterday, endOf31Days);
   const originalEvents = [];
   const helperEvents = [];
 
@@ -90,17 +92,32 @@ function createEventBasedOnNotifications() {
     }
   });
 
+  const originalEventsIds = new Set(
+    originalEvents.map((event) => event.getId())
+  );
+
+  //Delete helper events without parent
+  helperEvents.forEach((event) => {
+    const matchOriginalEventIdReExp = new RegExp(`${parentIdName}=[(.+?)]`);
+    const parentId = event.getDescription().match(matchOriginalEventIdReExp)[0];
+
+    if (!originalEventsIds.has(parentId)) {
+      event.deleteEvent();
+    }
+  });
+
   // Process original events
   originalEvents.forEach((event) => {
     const title = event.getTitle();
     const startTime = event.getStartTime();
     const originalEventId = event.getId();
-    const shortId = createShortIdFromString(originalEventId);
+    const originalEventShortId = createShortIdFromString(originalEventId);
     let description = event.getDescription();
+    const eventStatus = event.getStatus();
 
     // Ensure description has IDs for tracking
-    if (!description.includes(shortId)) {
-      description += `\n\n${alarmIdName}=[${shortId}]`;
+    if (!description.includes(originalEventShortId)) {
+      description += `\n\n${alarmIdName}=[${originalEventShortId}]`;
       event.setDescription(description.trim());
       log(`✏️ Updated description with IDs for: "${title}"`);
     }
@@ -121,7 +138,7 @@ function createEventBasedOnNotifications() {
 
     // Check for changes using snapshot to avoid unnecessary recreation
     const lastSnapshotRaw = userProps.getProperty(
-      `${snapshotKey}_${originalEventId}`
+      `${snapshotKey}_${originalEventShortId}`
     );
     const lastSnapshot = lastSnapshotRaw ? JSON.parse(lastSnapshotRaw) : null;
 
@@ -130,6 +147,7 @@ function createEventBasedOnNotifications() {
       startTime: event.getStartTime().getTime(),
       endTime: event.getEndTime().getTime(),
       title: event.getTitle(),
+      status: eventStatus,
     };
 
     if (JSON.stringify(lastSnapshot) === JSON.stringify(currentSnapshot)) {
@@ -142,7 +160,7 @@ function createEventBasedOnNotifications() {
     // Delete outdated helpers for this event
     helperEvents
       .filter((e) =>
-        e.getDescription().includes(`${parentIdName}=[${originalEventId}]`)
+        e.getDescription().includes(`${parentIdName}=[${originalEventShortId}]`)
       )
       .forEach((e) => {
         e.deleteEvent();
@@ -154,7 +172,7 @@ function createEventBasedOnNotifications() {
       const reminderTime = new Date(
         startTime.getTime() - minutesBefore * 60 * 1000
       );
-      if (reminderTime < startOfYesterday) {
+      if (reminderTime < startOfYesterday || eventStatus === "cancelled") {
         log(`⏩ Skipping past reminder for "${title}" at ${reminderTime}`);
         return;
       }
@@ -165,7 +183,7 @@ function createEventBasedOnNotifications() {
       const helperTitle = `[${readableValue}${readableUnit} before]: ${title}`;
 
       cal.createEvent(helperTitle, reminderTime, reminderEndTime, {
-        description: `${parentIdName}=[${originalEventId}]\n${alarmIdName}=[${createRandomShortId()}]`,
+        description: `${parentIdName}=[${originalEventShortId}]\n${alarmIdName}=[${createRandomShortId()}]`,
       });
 
       log(`✅ Created helper: "${helperTitle}" at ${reminderTime}`);
@@ -173,7 +191,7 @@ function createEventBasedOnNotifications() {
 
     // Update snapshot for this event
     userProps.setProperty(
-      `${snapshotKey}_${originalEventId}`,
+      `${snapshotKey}_${originalEventShortId}`,
       JSON.stringify(currentSnapshot)
     );
   });
