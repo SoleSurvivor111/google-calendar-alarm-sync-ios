@@ -113,7 +113,10 @@ function createEventBasedOnNotifications() {
     const originalEventId = event.getId();
     const originalEventShortId = createShortIdFromString(originalEventId);
     let description = event.getDescription();
-    const eventStatus = event.getStatus();
+    let eventStatus = "unknown";
+    if (typeof event.getStatus === "function") {
+      eventStatus = event.getStatus();
+    }
 
     // Ensure description has IDs for tracking
     if (!description.includes(originalEventShortId)) {
