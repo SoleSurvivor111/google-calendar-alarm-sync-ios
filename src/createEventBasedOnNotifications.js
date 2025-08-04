@@ -81,7 +81,7 @@ function createEventBasedOnNotifications() {
 
   const allEvents = cal.getEvents(startOfYesterday, endOf31Days);
   const originalEvents = [];
-  const helperEvents = [];
+  let helperEvents = [];
 
   // Separate original and helper events
   allEvents.forEach((event) => {
@@ -96,15 +96,21 @@ function createEventBasedOnNotifications() {
     originalEvents.map((event) => event.getId())
   );
 
-  //Delete helper events without parent
-  helperEvents.forEach((event) => {
-    const matchOriginalEventIdReExp = new RegExp(`${parentIdName}=[(.+?)]`);
-    const parentId = event.getDescription().match(matchOriginalEventIdReExp)[0];
+  // Delete helper events without parent
+  const filteredEvents = helperEvents.filter((event) => {
+    const matchOriginalEventIdReExp = new RegExp(`${parentIdName}=\\[(.+?)\\]`);
+    const match = event.getDescription().match(matchOriginalEventIdReExp);
+    const parentId = match && match[1];
 
     if (!originalEventsIds.has(parentId)) {
       event.deleteEvent();
+      return false; // Exclude from new array
     }
+
+    return true; // Keep in new array
   });
+
+  helperEvents = filteredEvents;
 
   // Process original events
   originalEvents.forEach((event) => {
@@ -153,7 +159,12 @@ function createEventBasedOnNotifications() {
       status: eventStatus,
     };
 
-    if (JSON.stringify(lastSnapshot) === JSON.stringify(currentSnapshot)) {
+    if (
+      lastSnapshot?.reminders?.join() === reminders.join() &&
+      lastSnapshot?.startTime === currentSnapshot.startTime &&
+      lastSnapshot?.endTime === currentSnapshot.endTime &&
+      lastSnapshot?.status === currentSnapshot.status
+    ) {
       log(`✅ No change for "${event.getTitle()}". Skipping.`);
       return;
     }
@@ -161,21 +172,24 @@ function createEventBasedOnNotifications() {
     log(`🔄 Changes detected for "${title}". Updating helpers.`);
 
     // Delete outdated helpers for this event
-    helperEvents
-      .filter((e) =>
+    for (let i = helperEvents.length - 1; i >= 0; i--) {
+      const e = helperEvents[i];
+      if (
         e.getDescription().includes(`${parentIdName}=[${originalEventShortId}]`)
-      )
-      .forEach((e) => {
+      ) {
         e.deleteEvent();
         log(`🗑️ Deleted outdated helper: ${e.getTitle()}`);
-      });
+        helperEvents.splice(i, 1);
+      }
+    }
 
     // Create new helper events for each reminder
     reminders.forEach((minutesBefore) => {
       const reminderTime = new Date(
         startTime.getTime() - minutesBefore * 60 * 1000
       );
-      if (reminderTime < startOfYesterday || eventStatus === "cancelled") {
+
+      if (reminderTime < now || eventStatus === "cancelled") {
         log(`⏩ Skipping past reminder for "${title}" at ${reminderTime}`);
         return;
       }
@@ -193,9 +207,11 @@ function createEventBasedOnNotifications() {
     });
 
     // Update snapshot for this event
-    userProps.setProperty(
-      `${snapshotKey}_${originalEventShortId}`,
-      JSON.stringify(currentSnapshot)
-    );
+    if (JSON.stringify(lastSnapshot) !== JSON.stringify(currentSnapshot)) {
+      userProps.setProperty(
+        `${snapshotKey}_${originalEventShortId}`,
+        JSON.stringify(currentSnapshot)
+      );
+    }
   });
 }
