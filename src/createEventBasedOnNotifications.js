@@ -61,7 +61,7 @@ function createEventBasedOnNotifications() {
   const startOfYesterday = new Date(startOfToday.getTime() - msPerDay);
   startOfYesterday.setDate(startOfYesterday.getDate() - 1);
   startOfYesterday.setHours(0, 0, 0, 0);
-  const endOf31Days = new Date(startOfToday.getTime() + 2 * msPerDay * 31);
+  const endOf31Days = new Date(startOfToday.getTime() + msPerDay * 31);
 
   const parentIdName = "parentId";
   const alarmIdName = "alarmId";
